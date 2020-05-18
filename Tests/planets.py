@@ -47,6 +47,10 @@ def au_to_parsecs(*args):
 def au_to_km(*args):
     return [au * 149597870.700 for au in args]
 
+def km_to_parsecs(x):
+    par = x * 3.24078e-14 * 1.0e+8
+    print(par)
+    return par
 
 def au_per_day_to_kms(*args):
     return [au_to_km(apd)[0] / 86400.0 for apd in args]  # should be 3+7
@@ -75,14 +79,17 @@ class Frame(Window):
                 planet.x_vel *= -1
                 planet.y_vel *= -1
                 planet.z_vel *= -1
+        elif symbol == self.keys.R:
+            self.position = 0, 0, 0
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
-        self.speed += scroll_y * 2
+        self.speed *= pow(2, scroll_y/10)
 
 
 class Planet(ThreeD.Sphere):
     all_planets = []
     gravitation_constant = 4.302 * 10 ** -3  # 10000000000
+    real_sizes = True
 
     '''
     Units:
@@ -92,11 +99,11 @@ class Planet(ThreeD.Sphere):
     time = years?
     '''
 
-    def __init__(self, image, cords, mass, velocities=(0, 0, 0), image_dimensions=(50, 50)):
+    def __init__(self, image, cords, mass, velocities=(0, 0, 0), radius=0.5):
         self.x_vel, self.y_vel, self.z_vel = velocities
         self.mass = mass
         self.real_x, self.real_y, self.real_z = cords
-        super(Planet, self).__init__(self.sim_pos(), 0.5, image)
+        super(Planet, self).__init__(self.sim_pos(), radius if self.real_sizes else 0.5, image)
         self.all_planets.append(self)
 
     @staticmethod
@@ -198,7 +205,7 @@ if __name__ == '__main__':
     current_conversion = unit_per_pixel / desired_width
     Sun = Planet(
         image=YELLOW,
-        image_dimensions=(20, 20),
+        radius=km_to_parsecs(696340),
         cords=(0, 0, 0),
         velocities=(0, 0, 0),
         mass=1  # in solar mass
@@ -211,7 +218,7 @@ if __name__ == '__main__':
     VZ = -1.551747830294273E-03
     Mercury = Planet(
         image=GREY,
-        image_dimensions=(5, 5),
+        radius=km_to_parsecs(2439.7),
         cords=au_to_parsecs(X, Y, Z),
         velocities=au_per_day_to_kms(VX, VY, VZ),
         mass=mass_converter(0.330)  # in solar mass
@@ -225,7 +232,7 @@ if __name__ == '__main__':
 
     Venus = Planet(
         image=ORANGE,
-        image_dimensions=(5, 5),
+        radius=km_to_parsecs(6051.8),
         cords=au_to_parsecs(X, Y, Z),
         velocities=au_per_day_to_kms(VX, VY, VZ),
         mass=mass_converter(4.87)  # in solar mass
@@ -238,7 +245,7 @@ if __name__ == '__main__':
     VZ = 5.507834514499402E-07
     Earth = Planet(
         image=GREEN,
-        image_dimensions=(5, 5),
+        radius=km_to_parsecs(6378.1),
         cords=au_to_parsecs(X, Y, Z),
         velocities=au_per_day_to_kms(VX, VY, VZ),
         mass=mass_converter(5.97)  # in solar mass
@@ -251,7 +258,7 @@ if __name__ == '__main__':
     VZ = -3.665143740675675E-04
     Mars = Planet(
         image=RED,
-        image_dimensions=(5, 5),
+        radius=km_to_parsecs(3396.2),
         cords=au_to_parsecs(X, Y, Z),
         velocities=au_per_day_to_kms(VX, VY, VZ),
         mass=mass_converter(0.642)  # in solar mass
@@ -264,7 +271,7 @@ if __name__ == '__main__':
     VZ = -1.708863890806112E-04
     Jupiter = Planet(
         image=BROWN,
-        image_dimensions=(5, 5),
+        radius=km_to_parsecs(71492),
         cords=au_to_parsecs(X, Y, Z),
         velocities=au_per_day_to_kms(VX, VY, VZ),
         mass=mass_converter(1898)  # in solar mass
@@ -277,7 +284,7 @@ if __name__ == '__main__':
     VZ = -2.299837026736019E-04
     Saturn = Planet(
         image=PINK,
-        image_dimensions=(5, 5),
+        radius=km_to_parsecs(60268),
         cords=au_to_parsecs(X, Y, Z),
         velocities=au_per_day_to_kms(VX, VY, VZ),
         mass=mass_converter(568)  # in solar mass
@@ -290,7 +297,7 @@ if __name__ == '__main__':
     VZ = 4.156423978886388E-05
     Uranus = Planet(
         image=BLUE,
-        image_dimensions=(5, 5),
+        radius=km_to_parsecs(25559),
         cords=au_to_parsecs(X, Y, Z),
         velocities=au_per_day_to_kms(VX, VY, VZ),
         mass=mass_converter(86.8)  # in solar mass
@@ -303,7 +310,7 @@ if __name__ == '__main__':
     VZ = -7.813901375734837E-05
     Neptune = Planet(
         image=LIGHT_BLUE,
-        image_dimensions=(5, 5),
+        radius=km_to_parsecs(24764),
         cords=au_to_parsecs(X, Y, Z),
         velocities=au_per_day_to_kms(VX, VY, VZ),
         mass=mass_converter(102)  # in solar mass

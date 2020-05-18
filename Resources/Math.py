@@ -23,8 +23,11 @@ class Vector(list):
     def __truediv__(self, other):
         return self * (1/other)
 
+    def dot_product(self, other):
+        return (self * other) / (self.magnitude() * other.magnitude())
+
     def __pow__(self, power, modulo=None):
-        pass
+        return self.dot_product(power)
 
     def magnitude(self):
         return sqrt(sum([i * i for i in self]))
@@ -33,10 +36,40 @@ class Vector(list):
         x = 1/self.magnitude()
         return self * x
 
+    def resize(self, new_len):
+        x = new_len/self.magnitude()
+        for i in range(len(self)):
+            self[i] *= x
+
     @staticmethod
     def from_2_points(pos1, pos2):
         vals = [i2 - i1 for i1, i2 in zip(pos1, pos2)]
         return Vector(*vals)
+
+    def get_angle(self):
+        dimension = len(self)
+        if dimension == 2:
+            x, y = self
+            return degrees(acos(x)) if y >= 0 else 360-degrees(acos(x))
+        elif dimension == 3:
+            x, y, z = self
+            xy = degrees(acos(x)) if y >= 0 else 360-degrees(acos(x))  # roll
+            xz = degrees(acos(x)) if z >= 0 else 360-degrees(acos(x))  # yaw
+            yz = degrees(acos(y)) if z >= 0 else 360-degrees(acos(y))  # pitch
+            return xy, xz, yz
+
+    @staticmethod
+    def from_angles_and_mag(angles, mag: float):
+        if type(angles) != list:
+            angles = [angles]
+        if len(angles) == 1:
+            theta = angles[0]
+            return Vector(cos(theta), sin(theta))
+        else:
+            pass
+
+    def angle_to(self, other):
+        return degrees(acos(self.dot_product(other)))
 
     def __repr__(self):
         return f"Vector{tuple(self)}"
@@ -95,6 +128,6 @@ class Matrix(list):
         return Matrix(*new)
 
 
-
 def distance(pos1, pos2):
-    return sqrt(sum([(i2-i1)**2] for i1, i2 in zip(pos1, pos2)))
+    # print([[(i2-i1)**2] for i1, i2 in zip(pos1, pos2)])
+    return sqrt(sum([(i2-i1)**2 for i1, i2 in zip(pos1, pos2)]))

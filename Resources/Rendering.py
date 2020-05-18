@@ -1,6 +1,7 @@
 import pyglet
 from Resources.Overlays import _TemplateOverlay
-from Resources.Math import distance, Vector
+from Resources.Math import distance, Vector, sin
+from copy import deepcopy
 
 low = None
 
@@ -60,10 +61,6 @@ class _ElementTemplate:
         self._raw_points = self._points_to_raw(self.vertices)
         self.vertex_list.vertices = list(self._raw_points)
 
-    # def test(self):
-    #     count = len(self.vertices)
-    #     return pyglet.graphics.vertex_list(count, (self._vertex_type, self._raw_points), self.overlay.low_level(self))
-
     def set_overlay(self, overlay: _TemplateOverlay):
         self.overlay = overlay
         self.vertex_list = self._get_vertex_list()
@@ -101,8 +98,6 @@ class _ElementTemplate:
         return self._make_vertex_list(self._raw_points, self.overlay)
 
     def _make_vertex_list(self, vertices: tuple, overlay: _TemplateOverlay):
-        print(self.amount_of_vertices, (self._vertex_type, self._raw_points), self.overlay.low_level(self))
-        print(self.group is not None)
         return self.group.add_raw(*self._get_vertex_data(vertices, overlay)) if self.group is not None else pyglet.graphics.vertex_list(self.amount_of_vertices, (self._vertex_type, self._raw_points), self.overlay.low_level(self))
 
     def pair(self, other):  # can't type while in the class
@@ -121,7 +116,6 @@ class _ElementTemplate:
         if self.showing:
             self.showing = False
             self.group.remove(self)
-            print(self.group)
             self.vertex_list = self._get_vertex_list()
 
     def show(self):
@@ -134,8 +128,11 @@ class _ElementTemplate:
         if hasattr(self, "vertex_list") and self.vertex_list is not None:
             self.vertex_list.delete()
 
+    def get_nearest_point(self, pt):
+        return self.location
+
     def distance(self, pt: tuple):
-        return distance(self.location, pt)
+        return distance(self.get_nearest_point(pt), pt)
 
     def _find_center(self):
         sums = [0 for i in range(self.dimension)]
@@ -156,6 +153,23 @@ class _ElementTemplate:
         g = self.group
         g - self
         self.vertex_list = g + self
+
+    def copy(self, pos=None):
+        c = deepcopy(self)
+        if pos is not None:
+            c.moveTo(*pos)
+        return c
+
+    def do_collision(self, pos: tuple, trans: Vector):
+        new_pos = Vector(pos) + trans
+        if self.distance(tuple(new_pos)) < 0:
+            perp = Vector.from_2_points(self.get_nearest_point(pos), pos)
+            dis_traveled = trans.magnitude()
+            theta = perp.angle_to(dis_traveled)
+            horizontal = sin(theta) * dis_traveled
+            return perp + horizontal
+        return trans
+
 
 # draw group  # todo make this better
 class Group:

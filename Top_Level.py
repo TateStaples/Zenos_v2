@@ -1,3 +1,4 @@
+
 import pyglet
 from Low_Level import LowLevel
 import math
@@ -27,6 +28,7 @@ class Window(pyglet.window.Window):
         self.push_handlers(self.key_checker)
         self._is_fog = False
         self.speed = 20
+        self.colliables = []
 
     def start(self):
         self._inner.setup()
@@ -92,9 +94,15 @@ class Window(pyglet.window.Window):
         self.mouse_locked = should
         self.set_exclusive_mouse(should)
 
-    def move_forward(self, dis):
-        dx, dy, dz = self.vision_vector() * dis
-        x, y, z = self.position
+    def move_forward(self, dis, planar=False):
+        if planar:
+            dx, dy, dz = self.vision_vector()
+            move = Vector(dx, 0, dz).unit_vector() * dis
+        else:
+            move = Vector(self.vision_vector() * dis)
+
+        for collidable in self.colliables:
+            move = collidable.do_collision
         self.position = x + dx, y + dy, z + dz
         self._inner.update_camera_position()
 
@@ -141,3 +149,10 @@ class Window(pyglet.window.Window):
         dz = math.cos(math.radians(side)) * math.cos(math.radians(up))
         dy = math.sin(math.radians(up))
         return Vector(dx, dy, dz).unit_vector()
+
+    def move_camera(self, dx, dy, dz):
+        x, y, z = self.position
+        self.position = x + dx, y + dy, z + dz
+
+    def add_collidable(self, obj):
+        self.colliables.append(obj)

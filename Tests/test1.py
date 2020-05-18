@@ -1,5 +1,5 @@
 from Zenos_package import *
-import pyglet
+
 
 class TestWindow(Window):
     c = TwoD.Square((500, 100), 100, Color(255, 0, 0, 128))
@@ -11,8 +11,6 @@ class TestWindow(Window):
 
     def periodic(self, dt: float):
         super(TestWindow, self).periodic(dt)
-        # glClear(GL_COLOR_BUFFER_BIT)
-        # self.render(self.c2, self.c)
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.c.moveTo((x, y))

@@ -112,12 +112,12 @@ class LowerDimensional(Figure):  # putting stuff in _2d into 3d space
 # todo clean this up - also improve location
 class RectPrism(Figure):
     mode = pyglet.graphics.GL_QUADS
-    top_indices = 0, 12
-    bottom_indices = 12, 24
-    front_indices = 24, 36
-    back_indices = 36, 48
-    right_indices = 48, 60
-    left_indices = 60, 72
+    # top_indices = 0, 12
+    # bottom_indices = 12, 24
+    # front_indices = 24, 36
+    # back_indices = 36, 48
+    # right_indices = 48, 60
+    # left_indices = 60, 72
 
     def __init__(self, pos: tuple, l: float, w: float, h: float, texture: _TemplateOverlay = WHITE, group=None):
         super(RectPrism, self).__init__(texture)
@@ -129,11 +129,11 @@ class RectPrism(Figure):
         self.vertices = self._get_vertices()
         self._initialize()
 
-    def _create_vertex_list(self, verts: tuple, overlay: _TemplateOverlay):
-        return pyglet.graphics.vertex_list(4, (self._vertex_type, verts), overlay.lower_level(self._raw_to_points(verts)))
+    # def _create_vertex_list(self, verts: tuple, overlay: _TemplateOverlay):
+    #     return pyglet.graphics.vertex_list(4, (self._vertex_type, verts), overlay.lower_level(self._raw_to_points(verts)))
 
     def _get_vertices(self):
-        return self._get_all_vertices()
+        return self._get_top() + self._get_bottom() + self._get_front() + self._get_back() + self._get_right() + self._get_left()
 
     def _get_all_vertices(self):
         return self._get_bottom() + self._get_top() + self._get_front() + self._get_back() + self._get_right() + self._get_left()
@@ -145,10 +145,12 @@ class RectPrism(Figure):
 
     def _get_top(self):
         x, y, z, dx, dy, dz = self._get_creation_info()
+        # tlb, tlf, trb, trf
         return x - dx, y + dy, z - dz, x - dx, y + dy, z + dz, x + dx, y + dy, z + dz, x + dx, y + dy, z - dz
 
     def _get_bottom(self):
         x, y, z, dx, dy, dz = self._get_creation_info()
+        # blb, blf, brb, brf
         return x - dx, y - dy, z - dz, x + dx, y - dy, z - dz, x + dx, y - dy, z + dz, x - dx, y - dy, z + dz
 
     def _get_front(self):
@@ -207,14 +209,20 @@ class RectPrism(Figure):
         
     '''
 
-    def distance(self, pt: tuple):
+    def get_nearest_point(self, pt: tuple):
         x, y, z, dx, dy, dz = self._get_creation_info()
         x2, y2, z2 = pt
-        x1 = x-dx if x2 < x-dx else x2 if x2 < x+dx else x+dx
-        y1 = y - dy if y2 < y - dy else y2 if y2 < y + dy else y + dy
-        z1 = z - dz if z2 < z - dz else z2 if z2 < z + dz else z + dz
-        return distance((x1, y1, z1), pt) \
-               * -1 if x1 == x+dx and y1 == y+dy and z1 == z+dz else 1  # reverse if inside cube
+        x1 = x-dx if x2 <= x-dx else x2 if x2 < x+dx else x+dx
+        y1 = y - dy if y2 <= y - dy else y2 if y2 < y + dy else y + dy
+        z1 = z - dz if z2 <= z - dz else z2 if z2 < z + dz else z + dz
+        return x1, y1, z1
+
+    def distance(self, pt):
+        x2, y2, z2 = pt
+        x1, y1, z1 = self.get_nearest_point(pt)
+        d = distance((x1, y1, z1), pt)
+        return d if x1 != x2 or y1 != y2 or z1 != z2 else -1  # reverse if inside cube
+
 
 
 class Cube(RectPrism):
@@ -268,7 +276,6 @@ class Sphere(Figure):
             if not is_first_layer:
                 verts.extend(current_layer)
                 verts.extend(stuff)
-        print(verts)
         return verts
 
     octahedron_vertices = [
@@ -324,3 +331,16 @@ class Sphere(Figure):
 
     def distance(self, pt: tuple):
         return super(Sphere, self).distance(pt) - self.radius
+
+
+class Combination(_ElementTemplate):
+    def __init__(self, *args):
+        self.vertices = []
+
+    def _get_vertex_data(self, vertices: tuple, overlay: _TemplateOverlay):
+        pass
+
+
+class Mesh:
+    pass
+

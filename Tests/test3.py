@@ -1,6 +1,7 @@
 from Zenos_package import *
 import random
 
+
 class TestWindow(Window):
     def __init__(self):
         super(TestWindow, self).__init__()

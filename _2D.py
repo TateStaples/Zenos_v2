@@ -73,28 +73,15 @@ class _Template_2d(_ElementTemplate):
         example_pos = pos[0] if is_list else pos
         dimension = len(example_pos)
         if dimension == 3:
-            if is_list:
-                cls._pending3D = pos
-                pos = [(x, y) for x, y, z in pos]
-            else:
-                pos = pos[0], pos[1]
-                cls._pending3D = pos[2]
-        args = (pos, *args)
+            print("here")
+            new_pos = [(x, y) for x, y, z in pos] if is_list else pos[0:2]
+            og = type(cls).__call__(cls, new_pos, *args, *kwargs)
+            return og.get_3D_version(pos)
         return super(_Template_2d, cls).__new__(cls)
 
     def __init__(self, overlay):
         super(_Template_2d, self).__init__(overlay)
         self.rotation = 0
-
-    def _initialize(self):
-        if self._pending3D is not False:
-            if self._pending3D == list:
-                self._convert_to3d(self._pending3D)
-                self.hide()
-            else:
-                self._convert_to3d([(x, y, self._pending3D) for x, y in self.vertices])
-        else:
-            super(_Template_2d, self)._initialize()
 
     def moveTo(self, pos=None, rotation=None):
         pos = convert_pos(pos)
@@ -122,16 +109,12 @@ class _Template_2d(_ElementTemplate):
         self.rotation += amount
         self.vertices = rotate_polygon(self.vertices, amount, self._find_center())
 
-    def _convert_to3d(self, new_verts):
-        self._pending3D = False
-        self.vertices = new_verts
-
     def get_3D_version(self, pos):
         pos = convert_pos(pos)
         x, y, z = pos
         dx, dy = Vector.from_2_points(self.location, (x, y))
         verts = deepcopy(self.vertices)
-        self._convert_to3d([(x+dx, y+dy, 0) for x, y in self.vertices])
+        self._convert_to3d([(x+dx, y+dy, z) for x, y in self.vertices])
         new = LowerDimensional(self)
         self.vertices = verts
         return new
@@ -140,7 +123,7 @@ class _Template_2d(_ElementTemplate):
         return convert_pos((pos[0], pos[1]))
 
 
-class Text(_ElementTemplate):
+class Text(_Template_2d):
     dimension = 2
 
     def __init__(self, pos, str, font_size, font_color=WHITE):
@@ -169,6 +152,10 @@ class Text(_ElementTemplate):
 
     def render(self):
         self.label.draw()
+
+    def resize(self, amount):
+        self.font_size *= amount
+        self.update()
 
 
 class Shape(_Template_2d):
@@ -219,7 +206,7 @@ class Polygon(Shape):
 
 
 class RegularPolygon(Polygon):
-    def __init__(self, center, radius):
+    def __init__(self, center, radius, num_points):
         super(RegularPolygon, self).__init__()
 
 
