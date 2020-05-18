@@ -1,6 +1,6 @@
 import pyglet
 from Resources.Overlays import _TemplateOverlay
-from Resources.Math import distance, Vector, sin
+from Resources.Math import distance, Vector, cos, radians
 from copy import deepcopy
 
 low = None
@@ -165,8 +165,11 @@ class _ElementTemplate:
         if self.distance(tuple(new_pos)) < 0:
             perp = Vector.from_2_points(self.get_nearest_point(pos), pos)
             dis_traveled = trans.magnitude()
-            theta = perp.angle_to(dis_traveled)
-            horizontal = sin(theta) * dis_traveled
+            theta = perp.angle_to(trans)
+            perp2 = deepcopy(perp)
+            perp2.resize(cos(radians(theta)) * dis_traveled)
+            horizontal = Vector.from_2_points(perp2 + pos, new_pos)
+            # horizontal contains a dis, make into vector
             return perp + horizontal
         return trans
 

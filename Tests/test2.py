@@ -8,7 +8,8 @@ class TestWindow(Window):  # basic 3d Tests
 
     def __init__(self):
         super(TestWindow, self).__init__()
-        self.move_camera(-10, 0, 0)
+        self.move_camera(0, 0, -30)
+        self.add_collidable(self.c)
 
     def periodic(self, dt):
         super(TestWindow, self).periodic(dt)

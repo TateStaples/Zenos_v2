@@ -18,13 +18,18 @@ class Vector(list):
         return Vector([n1 - n2 for n1, n2 in zip(self, other)])
 
     def __mul__(self, other):
+        if type(other) == Vector:
+            return self.cross_product(other)
         return Vector(*[i*other for i in self])
 
     def __truediv__(self, other):
         return self * (1/other)
 
     def dot_product(self, other):
-        return (self * other) / (self.magnitude() * other.magnitude())
+        return sum([n1 * n2 for n1, n2 in zip(self, other)])
+
+    def cross_product(self, other):
+        pass
 
     def __pow__(self, power, modulo=None):
         return self.dot_product(power)
@@ -69,7 +74,7 @@ class Vector(list):
             pass
 
     def angle_to(self, other):
-        return degrees(acos(self.dot_product(other)))
+        return degrees(acos(self.dot_product(other) / (self.magnitude() * other.magnitude())))
 
     def __repr__(self):
         return f"Vector{tuple(self)}"
@@ -79,8 +84,6 @@ class Matrix(list):
     def __init__(self, *args):
         args = self._unpack_args(args)
         self.dimension = len(args), len(args[0])
-        # print(args)
-        # print(self.dimension)
         super(Matrix, self).__init__(args)
 
     def _unpack_args(self, args):
@@ -129,5 +132,4 @@ class Matrix(list):
 
 
 def distance(pos1, pos2):
-    # print([[(i2-i1)**2] for i1, i2 in zip(pos1, pos2)])
     return sqrt(sum([(i2-i1)**2 for i1, i2 in zip(pos1, pos2)]))

@@ -204,6 +204,11 @@ class Polygon(Shape):
         self.location = self._find_center()
         self._initialize()
 
+    def distance(self, pt: tuple):
+        verts = deepcopy(self.vertices)
+        distances = [distance(vert, pt) for vert in verts]
+        return min(distances)
+
 
 class RegularPolygon(Polygon):
     def __init__(self, center, radius, num_points):

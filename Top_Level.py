@@ -11,6 +11,7 @@ from Resources.Math import Vector
 class Window(pyglet.window.Window):
     active_window = None
     keys = pyglet.window.key
+    planar = True
 
     def __init__(self):
         super(Window, self).__init__(resizable=True)
@@ -94,16 +95,16 @@ class Window(pyglet.window.Window):
         self.mouse_locked = should
         self.set_exclusive_mouse(should)
 
-    def move_forward(self, dis, planar=False):
-        if planar:
+    def move_forward(self, dis):
+        if self.planar:
             dx, dy, dz = self.vision_vector()
             move = Vector(dx, 0, dz).unit_vector() * dis
         else:
-            move = Vector(self.vision_vector() * dis)
+            move = self.vision_vector() * dis
 
         for collidable in self.colliables:
-            move = collidable.do_collision
-        self.position = x + dx, y + dy, z + dz
+            move = collidable.do_collision(self.position, move)
+        self.position = tuple(move+self.position)
         self._inner.update_camera_position()
 
     def move_sideways(self, dis):
@@ -112,8 +113,10 @@ class Window(pyglet.window.Window):
         dx = math.sin(math.radians(side)) * dis
         dz = math.cos(math.radians(side)) * dis
         dy = 0  # math.sin(math.radians(up)) * dis
-        x, y, z = self.position
-        self.position = x + dx, y + dy, z + dz
+        move = Vector(dx, dy, dz)
+        for collidable in self.colliables:
+            move = collidable.do_collision(self.position, move)
+        self.position = tuple(move + self.position)
         self._inner.update_camera_position()
 
     def is_pressed(self, key):
@@ -154,5 +157,6 @@ class Window(pyglet.window.Window):
         x, y, z = self.position
         self.position = x + dx, y + dy, z + dz
 
-    def add_collidable(self, obj):
-        self.colliables.append(obj)
+    def add_collidable(self, *args):
+        for obj in args:
+            self.colliables.append(obj)
