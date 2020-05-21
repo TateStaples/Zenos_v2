@@ -29,6 +29,7 @@ class Window(pyglet.window.Window):
         self.push_handlers(self.key_checker)
         self._is_fog = False
         self.speed = 20
+        self.velocity = Vector(0, 0, 0)
         self.colliables = []
 
     def start(self):
@@ -47,6 +48,8 @@ class Window(pyglet.window.Window):
             self.move_sideways(dt * self.speed)
         elif self.is_pressed(LEFT) or self.is_pressed(A):
             self.move_sideways(-dt * self.speed)
+        self.move()
+        self.velocity = Vector(0, 0, 0)
         self.render_shown()
 
     def render(self, *args):
@@ -98,13 +101,11 @@ class Window(pyglet.window.Window):
     def move_forward(self, dis):
         if self.planar:
             dx, dy, dz = self.vision_vector()
-            move = Vector(dx, 0, dz).unit_vector() * dis
+            move = Vector(dx, 0, dz).unit_vector() * dis + self.velocity
         else:
-            move = self.vision_vector() * dis
+            move = self.vision_vector() * dis + self.velocity
 
-        for collidable in self.colliables:
-            move = collidable.do_collision(self.position, move)
-        self.position = tuple(move+self.position)
+        self.velocity = move
         self._inner.update_camera_position()
 
     def move_sideways(self, dis):
@@ -113,11 +114,15 @@ class Window(pyglet.window.Window):
         dx = math.sin(math.radians(side)) * dis
         dz = math.cos(math.radians(side)) * dis
         dy = 0  # math.sin(math.radians(up)) * dis
-        move = Vector(dx, dy, dz)
-        for collidable in self.colliables:
-            move = collidable.do_collision(self.position, move)
-        self.position = tuple(move + self.position)
+        move = Vector(dx, dy, dz) + self.velocity
+
+        self.velocity = move
         self._inner.update_camera_position()
+
+    def move(self):
+        for collidable in self.colliables:
+            self.velocity = collidable.do_collision(self.position, self.velocity)
+        self.position = tuple(self.velocity + self.position)
 
     def is_pressed(self, key):
         return self.key_checker[key]
