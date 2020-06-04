@@ -1,18 +1,20 @@
-
 import pyglet
 from Low_Level import LowLevel
 import math
 from pyglet.window.key import *
 from Resources.Overlays import BLACK, Color
 from Resources.Rendering import Group
-from Resources.Math import Vector
+from Resources.Math import Vector, rotate_3d
+from Physics import Physical
 
 
 class Window(pyglet.window.Window):
     active_window = None
     keys = pyglet.window.key
     planar = True
+    running_physics = False
 
+    # setup
     def __init__(self):
         super(Window, self).__init__(resizable=True)
         Window.active_window = self
@@ -28,9 +30,11 @@ class Window(pyglet.window.Window):
         self.key_checker = KeyStateHandler()
         self.push_handlers(self.key_checker)
         self._is_fog = False
-        self.speed = 20
+        self.speed = 10
         self.velocity = Vector(0, 0, 0)
         self.colliables = []
+        self.hitbox = None
+        self.third_person = False
 
     def start(self):
         self._inner.setup()
@@ -38,20 +42,20 @@ class Window(pyglet.window.Window):
         pyglet.clock.schedule_interval(self.periodic, 1 / 120.0)
         pyglet.app.run()
 
+    # game loop
     def periodic(self, dt: float):
         self._inner.process_queue()
-        if self.is_pressed(DOWN) or self.is_pressed(S):
-            self.move_forward(-dt * self.speed)
-        elif self.is_pressed(UP) or self.is_pressed(W):
-            self.move_forward(dt * self.speed)
-        elif self.is_pressed(RIGHT) or self.is_pressed(D):
-            self.move_sideways(dt * self.speed)
-        elif self.is_pressed(LEFT) or self.is_pressed(A):
-            self.move_sideways(-dt * self.speed)
-        self.move()
-        self.velocity = Vector(0, 0, 0)
+        self.check_user_input()
+        self.move(dt)
+        if self.hitbox is None:  # else use the hitbox momentum variable
+            self.velocity = Vector(0, 0, 0)
+        if self.running_physics:
+            for obj in Physical.all_objects:
+                if obj is not self.hitbox:
+                    obj.update(dt)
         self.render_shown()
 
+    # draw functions
     def render(self, *args):
         for item in args:
             try:
@@ -65,7 +69,7 @@ class Window(pyglet.window.Window):
                     item.render()
                 else:
                     print(f"**invalid item rendered: {item}")
-                    quit()
+                    self.quit()
             except NameError:
                 print("The item you tried to render was not valid")
                 self.quit()
@@ -74,29 +78,53 @@ class Window(pyglet.window.Window):
         self.clear()
         self._inner.render()
 
-    def draw_all(self):
-        self._inner.assert_2d()
-        for item in self._draw_items2:
-            item.render()
-        self._inner.enable_3d()
-        for item in self._draw_items3:
-            item.render()
-
+    # mouse functions
     def on_mouse_motion(self, x, y, dx, dy):  # default will be altering camera view
         if self.mouse_locked:
             side, up = self.rotation
             theta_y = dy * self.turn_sensivity/100
             theta_x = dx * self.turn_sensivity/100
             self.rotation = side + theta_x, up + theta_y
-            self._inner.update_camera_position()
-
-    def set_background(self, color: Color):
-        self.bg_color = color
-        pyglet.gl.glClearColor(*[i/255 for i in color.raw()])
+            if self.hitbox is not None and self.third_person:
+                self.position = rotate_3d([self.position], self.hitbox.shape.location, theta_y, 0, -theta_x)[0]
+            # self._inner.update_camera_position()
 
     def lock_mouse(self, should=True):
         self.mouse_locked = should
         self.set_exclusive_mouse(should)
+
+    def is_pressed(self, key):
+        return self.key_checker[key]
+
+    def vision_vector(self):
+        side, up = self.rotation
+        dx = math.sin(math.radians(side)) * math.cos(math.radians(up))
+        dz = math.cos(math.radians(side)) * math.cos(math.radians(up))
+        dy = math.sin(math.radians(up))
+        return Vector(dx, dy, dz).unit_vector()
+
+    # movement
+    def check_user_input(self):
+        if self.is_pressed(DOWN) or self.is_pressed(S):
+            self.move_forward(-self.speed)
+        elif self.is_pressed(UP) or self.is_pressed(W):
+            self.move_forward(self.speed)
+        if self.is_pressed(RIGHT) or self.is_pressed(D):
+            self.move_sideways(self.speed)
+        elif self.is_pressed(LEFT) or self.is_pressed(A):
+            self.move_sideways(-self.speed)
+
+    def move(self, dt):
+        if self.hitbox is not None:
+            old_pos = self.hitbox.shape.location
+            self.hitbox.velocity = self.velocity
+            self.hitbox.update(dt)
+            trans = Vector.from_2_points(old_pos, self.hitbox.shape.location)
+            self.position = tuple(trans + self.position)
+            self.velocity = self.hitbox.velocity
+        else:
+            self.velocity *= dt
+            self.position = tuple(self.velocity + self.position)
 
     def move_forward(self, dis):
         if self.planar:
@@ -106,7 +134,7 @@ class Window(pyglet.window.Window):
             move = self.vision_vector() * dis + self.velocity
 
         self.velocity = move
-        self._inner.update_camera_position()
+        # self._inner.update_camera_position()
 
     def move_sideways(self, dis):
         side, up = self.rotation
@@ -117,16 +145,20 @@ class Window(pyglet.window.Window):
         move = Vector(dx, dy, dz) + self.velocity
 
         self.velocity = move
-        self._inner.update_camera_position()
+        # self._inner.update_camera_position()
 
-    def move(self):
-        for collidable in self.colliables:
-            self.velocity = collidable.do_collision(self.position, self.velocity)
-        self.position = tuple(self.velocity + self.position)
+    def move_camera(self, dx, dy, dz):
+        x, y, z = self.position
+        self.position = x + dx, y + dy, z + dz
 
-    def is_pressed(self, key):
-        return self.key_checker[key]
+    # buffered loading
+    def queue(self, function_or_class, args):
+        self._inner.queue.append((function_or_class, args))
 
+    def process_entire_queue(self):
+        self._inner.process_queue(20)
+
+    # background affects
     def set_fog(self, should=True, start_dis=20, depth=40):
         if should:
             # Enable fog. Fog "blends a fog color with each rasterized pixel fragment's
@@ -145,23 +177,13 @@ class Window(pyglet.window.Window):
         else:
             pyglet.gl.glDisable(pyglet.gl.GL_FOG)
 
-    def queue(self, function_or_class, args):
-        self._inner.queue.append((function_or_class, args))
+    def set_background(self, color: Color):
+        self.bg_color = color
+        pyglet.gl.glClearColor(*[i/255 for i in color.raw()])
 
-    def process_entire_queue(self):
-        self._inner.process_queue(20)
-
-    def vision_vector(self):
-        side, up = self.rotation
-        dx = math.sin(math.radians(side)) * math.cos(math.radians(up))
-        dz = math.cos(math.radians(side)) * math.cos(math.radians(up))
-        dy = math.sin(math.radians(up))
-        return Vector(dx, dy, dz).unit_vector()
-
-    def move_camera(self, dx, dy, dz):
-        x, y, z = self.position
-        self.position = x + dx, y + dy, z + dz
-
-    def add_collidable(self, *args):
-        for obj in args:
-            self.colliables.append(obj)
+    # hitbox for camera
+    def add_hitbox(self, physical):
+        if physical.shape.dimension == 3:
+            physical.shape.move(*self.position)
+        self.hitbox = physical
+        self.third_person = physical.shape.distance(self.position) > 0

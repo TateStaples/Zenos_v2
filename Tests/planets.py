@@ -57,6 +57,8 @@ def au_per_day_to_kms(*args):
 
 
 class Frame(Window):
+    planar = False
+
     def periodic(self, dt: float):
         super(Frame, self).periodic(dt)
         tick(dt)
@@ -81,6 +83,9 @@ class Frame(Window):
                 planet.z_vel *= -1
         elif symbol == self.keys.R:
             self.position = 0, 0, 0
+        elif symbol == self.keys.G:
+            m = not self.mouse_locked
+            self.lock_mouse(m)
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         self.speed *= pow(2, scroll_y/10)
@@ -195,7 +200,7 @@ class Planet(ThreeD.Sphere):
 
 if __name__ == '__main__':
     window = Frame()
-    window.set_fullscreen()
+    # window.set_fullscreen()
     start_time = time()
     unit_per_pixel = 0.0001456762698498
     desired_width = 300

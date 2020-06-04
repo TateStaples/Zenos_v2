@@ -1,5 +1,4 @@
 import pyglet
-from pyglet.gl import *
 
 
 class _TemplateOverlay:
@@ -21,45 +20,27 @@ class _TemplateOverlay:
 class Color(_TemplateOverlay):
     previously_made = []
 
-    def __init__(self, x: int, y: int, z: int, alpha=255, type="rgb"):
+    def __init__(self, r: int, g: int, b: int, alpha=255):
         self.opacity = alpha
         self.type = type
-        self.val1 = x
-        self.val2 = y
-        self.val3 = z
+        self.red = r
+        self.green = g
+        self.blue = b
         self.previously_made.append(self)
-
-    def convertToRGB(color):
-        if color.type == "bgr":
-            color.val1, color.val2 = color.val2, color.val1
-
-    def convertToBGR(color):
-        if color.type == "rgb":
-            color.val1, color.val2 = color.val2, color.val1
-
-    def convertToHSV(color):
-        pass
-
-    def assert_RGB(self):
-        if self.type != "rgb":
-            self.convertToRGB()
 
     def low_level(self, element):
         return self._mode, self.raw([i for i in range(element.amount_of_vertices)])
 
     def raw(self, vertices: list = [(0, 0)]):
         count = len(vertices)
-        self.assert_RGB()
-        color_data = (self.val1, self.val2, self.val3, self.opacity) * count
+        color_data = (self.red, self.green, self.blue, self.opacity) * count
         return color_data
 
     def mix(self, other, percentage: float = 0.5):
         my_percentage = 1 - percentage
-        other.assert_RGB()
-        self.assert_RGB()
-        return Color(int(my_percentage*self.val1 + percentage*other.val1),
-                     int(my_percentage*self.val2 + percentage*other.val2),
-                     int(my_percentage*self.val3 + percentage*other.val3))
+        return Color(int(my_percentage*self.red + percentage*other.red),
+                     int(my_percentage*self.green + percentage*other.green),
+                     int(my_percentage*self.blue + percentage*other.blue))
 
 
 class Gradient(_TemplateOverlay):  # this is test - does not actually work
@@ -171,3 +152,4 @@ PINK = Color(255, 192, 203)
 ORANGE = Color(255, 69, 0)
 BROWN = Color(165, 42, 42)
 LIGHT_BLUE = Color(135, 206, 235)
+CLEAR = Color(0, 0, 0, 0)

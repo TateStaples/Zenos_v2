@@ -1,12 +1,13 @@
 from Zenos_package import *
-
+from Physics import Physical
 
 class GameWindow(Window):
     planar = True
 
     def __init__(self):
         super(GameWindow, self).__init__()
-        self.position = 0, 0.1, 0
+        self.position = 0, 2.1, 0
+        self.add_hitbox(Physical(ThreeD.RectPrism((0, 1, 0), 0.5, 0.5, 2, CLEAR)))
         self.establish_walls()
         self.establish_collisions()
         self.grav_stength = 5
@@ -16,14 +17,11 @@ class GameWindow(Window):
     def establish_walls(self):
         width = 50
         wall_height = 10
-        self.floor = ThreeD.RectPrism((0, -1, 0), width * 2, width * 2, 2, BROWN)
-        self.wall1 = ThreeD.RectPrism((width, wall_height / 2, 0), width * 2, 2, wall_height, GREY)
-        self.wall2 = ThreeD.RectPrism((-width, wall_height / 2, 0), width * 2, 2, wall_height, GREY)
-        self.wall3 = ThreeD.RectPrism((0, wall_height / 2, width), 2, width * 2, wall_height, GREY)
-        self.wall4 = ThreeD.RectPrism((0, wall_height / 2, -width), 2, width * 2, wall_height, GREY)
-
-    def establish_collisions(self):
-        self.add_collidable(self.floor, self.wall1, self.wall2, self.wall3, self.wall4)
+        self.floor = Physical(ThreeD.RectPrism((0, -1, 0), width * 2, width * 2, 2, BROWN), moveable=False, do_grav=False)
+        self.wall1 = Physical(ThreeD.RectPrism((width, wall_height / 2, 0), width * 2, 2, wall_height, GREY), moveable=False, do_grav=False)
+        self.wall2 = Physical(ThreeD.RectPrism((-width, wall_height / 2, 0), width * 2, 2, wall_height, GREY), moveable=False, do_grav=False)
+        self.wall3 = Physical(ThreeD.RectPrism((0, wall_height / 2, width), 2, width * 2, wall_height, GREY), moveable=False, do_grav=False)
+        self.wall4 = Physical(ThreeD.RectPrism((0, wall_height / 2, -width), 2, width * 2, wall_height, GREY), moveable=False, do_grav=False)
         
     def periodic(self, dt: float):
         dv = Vector.from_2_points(self.previous_pos, self.position)

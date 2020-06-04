@@ -9,7 +9,7 @@ class Vector(list):
     @staticmethod
     def _unpack_args(args):
         inner = type(args[0])
-        return args[0] if inner == list or inner == tuple else args
+        return args[0] if inner == list or inner == tuple or inner == Vector else args
 
     def __add__(self, other):
         return Vector([n1 + n2 for n1, n2 in zip(self, other)])
@@ -74,6 +74,8 @@ class Vector(list):
             pass
 
     def angle_to(self, other):
+        if self.magnitude() == 0 or other.magnitude() == 0:
+            print(self, other)
         return degrees(acos(self.dot_product(other) / (self.magnitude() * other.magnitude())))
 
     def __repr__(self):
@@ -133,3 +135,69 @@ class Matrix(list):
 
 def distance(pos1, pos2):
     return sqrt(sum([(i2-i1)**2 for i1, i2 in zip(pos1, pos2)]))
+
+
+def rotate_polygon(list_of_points, rotation, center):
+    center_x, center_y = center
+    x_cordinates = []
+    y_cordinates = []
+
+    for x, y in list_of_points:
+        x_cordinates.append(x-center_x)
+        y_cordinates.append(y-center_y)
+    point_matrix = []
+    point_matrix.append(x_cordinates)
+    point_matrix.append(y_cordinates)
+
+    rotation = radians(rotation)
+    rotation_matrix = [
+        [cos(rotation), -sin(rotation)],
+        [sin(rotation), cos(rotation)]
+    ]
+
+    result = [[], []]
+    for i in range(len(x_cordinates)):  # result = R * thing1
+        result[0].append(0)
+        result[1].append(0)
+    for i in range(len(rotation_matrix)):
+        # iterate through columns of Y
+        for j in range(len(point_matrix[0])):
+            # iterate through rows of Y
+            for k in range(len(point_matrix)):
+                result[i][j] += rotation_matrix[i][k] * point_matrix[k][j]
+
+    polygon = []
+    for x, y in zip(result[0], result[1]):
+        polygon.append((x + center_x, y + center_y))
+
+    return polygon
+
+
+def rotate_3d(list_of_points, center, pitch, yaw, roll):
+    '''
+    A rotation of points in 3d space around a central point
+    :param list_of_points: all the points that are having the rotation applied
+    :param center: center of rotation
+    :param pitch: yz axis
+    :param yaw: xy axis
+    :param roll: xy axis
+    :return: a list of where points are after the rotation
+    '''
+    dx, dy, dz = center
+    translation_vector = Vector([dx, dy, dz])
+    point_matrix = Matrix(list_of_points)
+    for i, vector in enumerate(point_matrix):
+        point_matrix[i] = vector - translation_vector
+    x = radians(pitch)
+    y = radians(yaw)
+    z = radians(roll)
+    rotation_matrix = Matrix(
+        [cos(z) * cos(y), cos(y) * sin(x) * sin(z) - cos(x) * sin(y), cos(x) * cos(y) * sin(z) + sin(x) * sin(y)],
+        [cos(z) * sin(y), cos(x) * cos(y) + sin(x) * sin(z) * sin(y), cos(x) * sin(z) * sin(y)-cos(y) * sin(x)],
+        [-sin(z), cos(z) * sin(x), cos(x) * cos(z)]
+    )
+    rotated_matrix = rotation_matrix * point_matrix
+    for i, vector in enumerate(rotated_matrix):
+        rotated_matrix[i] = vector + translation_vector
+    new_points = [tuple(vector) for vector in rotated_matrix]
+    return new_points

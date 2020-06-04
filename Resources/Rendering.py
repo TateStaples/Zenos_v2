@@ -131,8 +131,14 @@ class _ElementTemplate:
     def get_nearest_point(self, pt):
         return self.location
 
-    def distance(self, pt: tuple):
-        return distance(self.get_nearest_point(pt), pt)
+    def distance(self, other):
+        if isinstance(other, _ElementTemplate):
+            p1 = self.get_nearest_point(other.location)
+            p2 = other.get_nearest_point(self.location)
+        else:
+            p1 = self.get_nearest_point(other)
+            p2 = other
+        return distance(p1, p2)
 
     def _find_center(self):
         sums = [0 for i in range(self.dimension)]
@@ -160,18 +166,8 @@ class _ElementTemplate:
             c.moveTo(*pos)
         return c
 
-    def do_collision(self, pos: tuple, trans: Vector):
-        new_pos = Vector(pos) + trans
-        if self.distance(tuple(new_pos)) < 0:
-            perp = Vector.from_2_points(self.get_nearest_point(pos), pos)
-            dis_traveled = trans.magnitude()
-            theta = perp.angle_to(trans)
-            perp2 = deepcopy(perp)
-            perp2.resize(cos(radians(theta)) * dis_traveled)
-            horizontal = Vector.from_2_points(perp2 + pos, new_pos)
-            # horizontal contains a dis, make into vector
-            return perp + horizontal
-        return trans
+    def __repr__(self):
+        return f"{type(self).__name__} @ {self.location}"
 
 
 # draw group  # todo make this better

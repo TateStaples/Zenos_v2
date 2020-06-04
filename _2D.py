@@ -2,7 +2,7 @@ import pyglet
 from math import *
 from Resources.Overlays import WHITE, _TemplateOverlay
 from Resources.Rendering import _ElementTemplate, WeirdRender
-from Resources.Math import Vector, distance
+from Resources.Math import Vector, distance, rotate_polygon
 from Low_Level import LowLevel
 from _3D import LowerDimensional
 from copy import deepcopy
@@ -19,42 +19,6 @@ def towards(pos1, pos2):
     angle = atan(dy / dx) if dx != 0 else pi / 2 if dy > 0 else 3 * pi / 2
     angle += pi if dx < 0 else 0
     return angle
-
-
-def rotate_polygon(list_of_points, rotation, center):
-    center_x, center_y = center
-    x_cordinates = []
-    y_cordinates = []
-
-    for x, y in list_of_points:
-        x_cordinates.append(x-center_x)
-        y_cordinates.append(y-center_y)
-    point_matrix = []
-    point_matrix.append(x_cordinates)
-    point_matrix.append(y_cordinates)
-
-    rotation = radians(rotation)
-    rotation_matrix = [
-        [cos(rotation), -sin(rotation)],
-        [sin(rotation), cos(rotation)]
-    ]
-
-    result = [[], []]
-    for i in range(len(x_cordinates)):  # result = R * thing1
-        result[0].append(0)
-        result[1].append(0)
-    for i in range(len(rotation_matrix)):
-        # iterate through columns of Y
-        for j in range(len(point_matrix[0])):
-            # iterate through rows of Y
-            for k in range(len(point_matrix)):
-                result[i][j] += rotation_matrix[i][k] * point_matrix[k][j]
-
-    polygon = []
-    for x, y in zip(result[0], result[1]):
-        polygon.append((x + center_x, y + center_y))
-
-    return polygon
 
 
 def reflect():

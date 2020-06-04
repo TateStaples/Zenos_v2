@@ -2,30 +2,9 @@ import pyglet
 from Low_Level import LowLevel
 from Resources.Overlays import WHITE, _TemplateOverlay
 from Resources.Rendering import _ElementTemplate
-from Resources.Math import Vector, distance, Matrix
+from Resources.Math import Vector, distance, Matrix, rotate_3d
 from math import *
 from copy import deepcopy
-
-
-def rotate_3d(list_of_points, center, pitch, yaw, roll):
-    dx, dy, dz = center
-    translation_vector = Vector([dx, dy, dz])
-    point_matrix = Matrix(list_of_points)
-    for i, vector in enumerate(point_matrix):
-        point_matrix[i] = vector - translation_vector
-    x = radians(pitch)
-    y = radians(yaw)
-    z = radians(roll)
-    rotation_matrix = Matrix(
-        [cos(z) * cos(y), cos(y) * sin(x) * sin(z) - cos(x) * sin(y), cos(x) * cos(y) * sin(z) + sin(x) * sin(y)],
-        [cos(z) * sin(y), cos(x) * cos(y) + sin(x) * sin(z) * sin(y), cos(x) * sin(z) * sin(y)-cos(y) * sin(x)],
-        [-sin(z), cos(z) * sin(x), cos(x) * cos(z)]
-    )
-    rotated_matrix = rotation_matrix * point_matrix
-    for i, vector in enumerate(rotated_matrix):
-        rotated_matrix[i] = vector + translation_vector
-    new_points = [tuple(vector) for vector in rotated_matrix]
-    return new_points
 
 
 class Template3d(_ElementTemplate):
@@ -218,6 +197,8 @@ class RectPrism(Figure):
         return x1, y1, z1
 
     def distance(self, pt):
+        if isinstance(pt, _ElementTemplate):
+            pt = pt.get_nearest_point(self.location)
         x2, y2, z2 = pt
         x1, y1, z1 = self.get_nearest_point(pt)
         d = distance((x1, y1, z1), pt)
@@ -233,6 +214,7 @@ class Cube(RectPrism):
 class Sphere(Figure):
     mode = pyglet.gl.GL_TRIANGLES  # pyglet.gl.GL_TRIANGLE_STRIP
     unit_sphere = None
+    detail = 4
 
     def __init__(self, pos: tuple, radius: float, overlay: _TemplateOverlay):
         if self.unit_sphere is None:
@@ -323,11 +305,16 @@ class Sphere(Figure):
         return points
 
     def create_sphere(self):
-        recurision_level = 3
+        recurision_level = self.detail
         triangles = []
         for triangle in self.octahedron_triangles:
             triangles.extend(self.divide_triangle(triangle, recurision_level))
         return self.inflate(triangles)
+
+    def get_nearest_point(self, pt):
+        v = Vector.from_2_points(self.location, pt)
+        v.resize(self.radius)
+        return v + self.location
 
     def distance(self, pt: tuple):
         return super(Sphere, self).distance(pt) - self.radius
