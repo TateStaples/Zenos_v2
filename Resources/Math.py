@@ -11,6 +11,10 @@ class Vector(list):
         inner = type(args[0])
         return args[0] if inner == list or inner == tuple or inner == Vector else args
 
+    def _empty(self):
+        while len(self) > 0:
+            self.pop()
+
     def __add__(self, other):
         return Vector([n1 + n2 for n1, n2 in zip(self, other)])
 
@@ -38,7 +42,7 @@ class Vector(list):
         return sqrt(sum([i * i for i in self]))
 
     def unit_vector(self):
-        x = 1/self.magnitude()
+        x = 1/self.magnitude() if self.magnitude() != 0 else Vector(0, 1, 0)
         return self * x
 
     def resize(self, new_len):
@@ -54,13 +58,13 @@ class Vector(list):
     def get_angle(self):
         dimension = len(self)
         if dimension == 2:
-            x, y = self
+            x, y = self.unit_vector()
             return degrees(acos(x)) if y >= 0 else 360-degrees(acos(x))
         elif dimension == 3:
-            x, y, z = self
-            xy = degrees(acos(x)) if y >= 0 else 360-degrees(acos(x))  # roll
-            xz = degrees(acos(x)) if z >= 0 else 360-degrees(acos(x))  # yaw
-            yz = degrees(acos(y)) if z >= 0 else 360-degrees(acos(y))  # pitch
+            x, y, z = self.unit_vector()
+            xy = degrees(acos(x/sqrt(x*x+y*y))) if y >= 0 else 360-degrees(acos(x/sqrt(x*x+y*y)))  # roll
+            xz = degrees(acos(x/sqrt(x*x+z*z))) if z >= 0 else 360-degrees(acos(x/sqrt(x*x+z*z)))  # yaw
+            yz = degrees(acos(y/sqrt(z*z+y*y))) if z >= 0 else 360-degrees(acos(y/sqrt(z*z+y*y)))  # pitch
             return xy, xz, yz
 
     @staticmethod
@@ -69,7 +73,7 @@ class Vector(list):
             angles = [angles]
         if len(angles) == 1:
             theta = angles[0]
-            return Vector(cos(theta), sin(theta))
+            return Vector(cos(theta), sin(theta)) * mag
         else:
             pass
 

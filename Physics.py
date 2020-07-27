@@ -21,6 +21,18 @@ class Physical:
     def __init__(self, shape: _ElementTemplate, intial_velocity: Vector = None, mass: float = 1,
                  do_standard_grav: bool = True, momentum: bool = True, friction_coefficient: float = 0.5,
                  moveable: bool = True, do_grav: bool = True, do_collisions: bool = True):
+        '''
+
+        :param shape: graphical representaiton
+        :param intial_velocity: velocity @ time of creation
+        :param mass: self explainatory
+        :param do_standard_grav: whether assuming earth grav or calculating based on other objects
+        :param momentum: whether object continues moving
+        :param friction_coefficient: rate of slow down when colliding with other
+        :param moveable: whether it can be moved by outside forces
+        :param do_grav: whether it is affected by gravity
+        :param do_collisions:
+        '''
         self.do_standard_gravity = do_standard_grav
         self.velocity = intial_velocity if intial_velocity is not None else Vector([0 for i in range(shape.dimension)])
         self.shape = shape
@@ -32,7 +44,7 @@ class Physical:
         self.affected_by_gravity = do_grav
 
     def do_collision(self, other, dt):
-        trans = self.velocity * dt
+        trans = self.velocity
         if trans.magnitude() == 0:
             return
         new_pos = Vector(self.shape.location) + trans
@@ -47,7 +59,7 @@ class Physical:
                                               new_pos)  # this find the component of initial trans parallel to wall
             # horizontal contains a dis, make into vector
             print(self.velocity)
-            self.velocity = perp + horizontal
+            self.velocity = (perp + horizontal) / dt
             print("collide:", self, other, self.velocity)
             if self.do_momentum:
                 acceleration = (perp2 - perp) / dt  # acceleration is change in velocity over time

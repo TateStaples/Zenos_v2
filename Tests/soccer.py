@@ -3,14 +3,14 @@ from Physics import Physical
 
 class GameWindow(Window):
     planar = True
-    # ball = Physical(ThreeD.Sphere((0, 2, 3), 1, Gradient(RED, BLUE, "horizontal")), do_grav=True, intial_velocity=Vector(0, -.1, 0))
+    ball = Physical(ThreeD.Sphere((0, 2, 3), 1, Gradient(RED, BLUE, "horizontal")), do_grav=True, intial_velocity=Vector(0, -.1, 0))
     running_physics = True
 
     def __init__(self):
         super(GameWindow, self).__init__()
         self.position = 0, 4, -5
         self.establish_walls()
-        self.add_hitbox(Physical(ThreeD.RectPrism((0, -1.5, 5), 0.5, 0.5, 2, RED), momentum=False))
+        self.add_hitbox(Physical(ThreeD.RectPrism((0, -1.5, 5), 0.5, 0.5, 2, RED), momentum=False, do_grav=True))
 
     def establish_walls(self):
         width = 50

@@ -5,3 +5,4 @@ from Top_Level import Window
 import _2D as TwoD
 import _3D as ThreeD
 import _4D as FourD
+import pyglet.gl as opengl

@@ -37,7 +37,6 @@ class _Template_2d(_ElementTemplate):
         example_pos = pos[0] if is_list else pos
         dimension = len(example_pos)
         if dimension == 3:
-            print("here")
             new_pos = [(x, y) for x, y, z in pos] if is_list else pos[0:2]
             og = type(cls).__call__(cls, new_pos, *args, *kwargs)
             return og.get_3D_version(pos)
@@ -78,7 +77,8 @@ class _Template_2d(_ElementTemplate):
         x, y, z = pos
         dx, dy = Vector.from_2_points(self.location, (x, y))
         verts = deepcopy(self.vertices)
-        self._convert_to3d([(x+dx, y+dy, z) for x, y in self.vertices])
+        # self._convert_to3d([(x+dx, y+dy, z) for x, y in self.vertices])
+        self.vertices = [LowLevel.convert_pos((x+dx, y+dy, z)) for x, y in self.vertices]
         new = LowerDimensional(self)
         self.vertices = verts
         return new

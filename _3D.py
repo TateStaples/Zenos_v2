@@ -98,7 +98,7 @@ class RectPrism(Figure):
     # right_indices = 48, 60
     # left_indices = 60, 72
 
-    def __init__(self, pos: tuple, l: float, w: float, h: float, texture: _TemplateOverlay = WHITE, group=None):
+    def __init__(self, pos: tuple, l: float, w: float, h: float, texture: _TemplateOverlay = WHITE):
         super(RectPrism, self).__init__(texture)
         pos = LowLevel.convert_pos(pos)
         self.location = pos
@@ -229,6 +229,7 @@ class Sphere(Figure):
         # self.vertices = self._get_vertices()
         self._initialize()
 
+    # not using this
     def _get_vertices(self, step):
         ox, oy, oz = self.location
         verts = []
@@ -320,12 +321,45 @@ class Sphere(Figure):
         return super(Sphere, self).distance(pt) - self.radius
 
 
-class Combination(_ElementTemplate):
-    def __init__(self, *args):
-        self.vertices = []
+class RegularPyramid(Figure):  # todo add base shape
+    mode = pyglet.gl.GL_TRIANGLES
 
-    def _get_vertex_data(self, vertices: tuple, overlay: _TemplateOverlay):
-        pass
+    def __init__(self, pos: tuple, base_radius: float, height: float, num_verts: int, overlay: _TemplateOverlay):
+        super(RegularPyramid, self).__init__(overlay)
+        self.location = LowLevel.convert_pos(pos)
+        self.point = self.location + (0, height, 0)
+        base = []
+        angle_change = 360 / num_verts
+        angle = angle_change/2
+        for i in range(num_verts):
+            dx, dz = sin(radians(angle)) * base_radius, cos(radians(angle)) * base_radius
+            base.append(self.location + (dx, 0, dz))
+            angle += angle_change
+            # print(self.location + (dx, 0, dz))
+        i = num_verts - 1
+        self.vertices = []
+        while i > -1: # allow full loop
+            self.vertices.extend(base[i])
+            self.vertices.extend(self.point)
+            self.vertices.extend(base[i-1])
+            i -= 1
+        self._initialize()
+
+
+class Cone(RegularPyramid):
+    circle_vert_count = 25
+    def __init__(self, pos: tuple, base_radius: float, height: float, overlay: _TemplateOverlay):
+        super(Cone, self).__init__(pos, base_radius, height, self.circle_vert_count, overlay)
+
+
+class Combination:
+    def __init__(self, *args):
+        self.figures = args
+
+    # move
+    # rotate
+    # hide
+    # show
 
 
 class Mesh:

@@ -1,4 +1,4 @@
-from Resources.Math import Vector
+from Resources.Math import sqrt
 
 if __name__ == '__main__':
-    print(Vector(1, 2, 3) + Vector(2, 4, 18))
+    print(7.06 * sqrt(2))

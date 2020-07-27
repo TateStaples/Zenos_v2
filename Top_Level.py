@@ -18,8 +18,6 @@ class Window(pyglet.window.Window):
     def __init__(self):
         super(Window, self).__init__(resizable=True)
         Window.active_window = self
-        pyglet.gl.glTexParameteri(pyglet.gl.GL_TEXTURE_2D, pyglet.gl.GL_TEXTURE_MIN_FILTER, pyglet.gl.GL_NEAREST)
-        pyglet.gl.glTexParameteri(pyglet.gl.GL_TEXTURE_2D, pyglet.gl.GL_TEXTURE_MAG_FILTER, pyglet.gl.GL_NEAREST)
         self.rotation = 0, 0
         self.position = 0, 0, 0
         self.mode = 2
