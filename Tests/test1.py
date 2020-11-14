@@ -2,18 +2,14 @@ from Zenos_package import *
 
 
 class TestWindow(Window):
-    c = TwoD.Square((500, 100), 100, Color(255, 0, 0, 128))
-    c2 = TwoD.Square((0, 100), 100, Color(0, 255, 0, 255))
-
-    def start(self):
-        self.c.put_on_top()
-        super(TestWindow, self).start()
+    head = ThreeD.Sphere((0, 2, 0), 0.5, WHITE)
+    body = ThreeD.Cone((0, 0, 0), 0.5, 1.75, WHITE)
+    pawn = ThreeD.Combination(head, body)
 
     def periodic(self, dt: float):
         super(TestWindow, self).periodic(dt)
-
-    def on_mouse_motion(self, x, y, dx, dy):
-        self.c.moveTo((x, y))
+        if self.is_pressed(self.keys.R):
+            self.pawn.move(0, dt, 0)
 
 
 if __name__ == '__main__':

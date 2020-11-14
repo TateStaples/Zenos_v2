@@ -1,8 +1,5 @@
 from Zenos_package import *
-import pyglet
 import random
-
-predators = []
 
 
 class Boid:
@@ -20,10 +17,10 @@ class Boid:
     box = ThreeD.RectPrism((0, 0, 0), box_length*2, box_width*2, box_height*2, WHITE)
 
     # configs
-    max_velocity = 60
-    visual_range = 30
-    coherence_weight = 0.005
-    alignment_weight = 0.1
+    max_velocity = 70
+    visual_range = 20
+    coherence_weight = 0.008
+    alignment_weight = 0.3
     separation_weight = 0.05
     predator_weight = 0.4
 
@@ -117,8 +114,8 @@ class Predator(Boid):
 
 
 class Frame(Window):
-    num_boids = 30
-    num_preds = 3
+    num_boids = 50
+    num_preds = 0
     planar = False
 
     def __init__(self):
@@ -134,6 +131,7 @@ class Frame(Window):
         super(Frame, self).periodic(dt)
         for b in Boid.all_boids:
             b.tick(dt)
+
 
 if __name__ == '__main__':
     f = Frame()

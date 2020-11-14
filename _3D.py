@@ -35,13 +35,13 @@ class Template3d(_ElementTemplate):
     def move(self, dx: float = 0.0, dy: float = 0.0, dz: float = 0.0,
              pitch: float = 0.0, yaw: float = 0.0, roll: float = 0.0):
         change = False
-        if dx != 0 or dy != 0 or dz != 0:
+        if any([dx, dy, dz]):
             change = True
             x, y, z = self.location
             self.location = Vector(x+dx, y+dy, z+dz)
             dx = -dx
             self.vertices = [(x+dx, y+dy, z+dz) for x, y, z in self.vertices]
-        if pitch != 0 or yaw != 0 or roll != 0:
+        if any([pitch, yaw, roll]):
             change = True
             self._rotate(pitch, yaw, roll)
         if change:
@@ -205,7 +205,6 @@ class RectPrism(Figure):
         return d if x1 != x2 or y1 != y2 or z1 != z2 else -1  # reverse if inside cube
 
 
-
 class Cube(RectPrism):
     def __init__(self, pos: tuple, side_length: float, texture: _TemplateOverlay = WHITE):
         super(Cube, self).__init__(pos, side_length, side_length, side_length, texture)
@@ -355,11 +354,50 @@ class Cone(RegularPyramid):
 class Combination:
     def __init__(self, *args):
         self.figures = args
+        self.location = Vector(sum([figure.location[0] for figure in args]) / len(args), \
+                        sum([figure.location[1] for figure in args]) / len(args), \
+                        sum([figure.location[2] for figure in args]) / len(args))
+        self.rotation = 0, 0, 0
 
     # move
-    # rotate
+    def move(self, dx: float = 0.0, dy: float = 0.0, dz: float = 0.0,
+             pitch: float = 0.0, yaw: float = 0.0, roll: float = 0.0):
+        p, y, r = self.rotation
+        self.rotation = p + pitch, y + yaw, r + roll
+        x, y, z = self.location
+        self.location = Vector(x + dx, y + dy, z + dz)
+
+        for figure in self.figures:
+            change = False
+            if any([dx, dy, dz]):
+                change = True
+                x, y, z = figure.location
+                figure.location = Vector(x + dx, y + dy, z + dz)
+                dx = -dx
+                figure.vertices = [(x + dx, y + dy, z + dz) for x, y, z in figure.vertices]
+            if any([pitch, yaw, roll]):
+                change = True
+                p, y, r = figure.rotation
+                figure.rotation = p + pitch, y + yaw, r + roll
+                figure.vertices = rotate_3d(figure.vertices, self.location, pitch, yaw, roll)
+            if change:
+                figure.update()
+
+    def moveTo(self, x: float = None, y: float = None, z: float = None,
+               pitch: float = None, yaw: float = None, roll: float = None):
+        ox, oy, oz = self.location
+        dx, dy, dz = x - ox, y - oy, z - oz if None not in [x, y, z] else 0, 0, 0
+        pitch_, yaw_, roll_ = self.rotation
+        d_pitch, d_yaw, d_roll = pitch - pitch_, yaw - yaw_, roll - roll_ if None not in [pitch, yaw, roll] else 0, 0, 0
+        self.move(dx, dy, dz, d_pitch, d_yaw, d_roll)
+
     # hide
+    def hide(self):
+        for figure in self.figures: figure.hide()
+
     # show
+    def show(self):
+        for figure in self.figures: figure.show()
 
 
 class Mesh:

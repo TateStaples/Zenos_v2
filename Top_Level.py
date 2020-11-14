@@ -37,12 +37,16 @@ class Window(pyglet.window.Window):
     def start(self):
         self._inner.setup()
         self.process_entire_queue()
-        pyglet.clock.schedule_interval(self.periodic, 1 / 120.0)
+        pyglet.clock.schedule_interval(self._periodic, 1 / 120.0)
         pyglet.app.run()
+
+    def _periodic(self, dt: float):
+        self._inner.process_queue()
+        self.periodic(dt)
+        self.render_shown()
 
     # game loop
     def periodic(self, dt: float):
-        self._inner.process_queue()
         self.check_user_input()
         self.move(dt)
         if self.hitbox is None:  # else use the hitbox momentum variable
@@ -51,7 +55,6 @@ class Window(pyglet.window.Window):
             for obj in Physical.all_objects:
                 if obj is not self.hitbox:
                     obj.update(dt)
-        self.render_shown()
 
     # draw functions
     def render(self, *args):

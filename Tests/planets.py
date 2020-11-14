@@ -200,7 +200,7 @@ class Planet(ThreeD.Sphere):
 
 if __name__ == '__main__':
     window = Frame()
-    # window.set_fullscreen()
+    window.set_fullscreen()
     start_time = time()
     unit_per_pixel = 0.0001456762698498
     desired_width = 300

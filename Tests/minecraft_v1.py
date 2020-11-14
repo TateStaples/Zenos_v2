@@ -18,5 +18,5 @@ if __name__ == '__main__':
     x = TestWindow()
     x.set_background(LIGHT_BLUE)
     x.lock_mouse()
-    x.set_fog(dis=10)
+    x.set_fog(start_dis=10)
     x.start()
